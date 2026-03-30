@@ -1,6 +1,12 @@
 # HabitOS v3.0
 
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
 Tracker de hábitos personal — dark/cyberpunk, sin servidor, sin dependencias locales.
+
+## 🎬 Demo
+
+![HabitOS Demo](multimedia/ezgif-193e159e7a5a9b19.gif)
 
 ## ✨ Características
 
@@ -17,6 +23,9 @@ Tracker de hábitos personal — dark/cyberpunk, sin servidor, sin dependencias 
 habitos-os/
 ├── index.html          # App de escritorio
 ├── mobile.html         # App móvil (bottom nav, cards táctiles)
+├── multimedia/         # GIFs, imágenes y recursos visuales
+├── └──── ezgif-193e159e7a5a9b19.gif
+├── LICENSE             # Licencia del proyecto (MIT)
 ├── css/
 │   └── style.css       # Todos los estilos
 └── js/
@@ -34,7 +43,7 @@ habitos-os/
 Clona el repo y abre `index.html` directamente en el navegador — no necesita servidor.
 
 ```bash
-git clone https://github.com/tu-usuario/habitos-os.git
+git clone https://github.com/je7remy/HabitOS-v3.0
 cd habitos-os
 open index.html   # macOS
 # o simplemente arrastra el archivo al navegador
@@ -74,4 +83,4 @@ Solo una, cargada desde CDN:
 
 ## 📄 Licencia
 
-MIT — úsalo, fórkalo, modifícalo libremente.
+Distribuido bajo la licencia MIT. Ver el archivo `LICENSE` para más detalles.
