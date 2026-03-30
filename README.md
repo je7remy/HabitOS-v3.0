@@ -1,12 +1,11 @@
 # HabitOS v3.0
-
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 Tracker de hábitos personal — dark/cyberpunk, sin servidor, sin dependencias locales.
 
 ## 🎬 Demo
 
-![HabitOS Demo](multimedia/ezgif-193e159e7a5a9b19.gif)
+![Demo](multimedia/ezgif-193e159e7a5a9b19.gif)
 
 ## ✨ Características
 
@@ -83,4 +82,4 @@ Solo una, cargada desde CDN:
 
 ## 📄 Licencia
 
-Distribuido bajo la licencia MIT. Ver el archivo `LICENSE` para más detalles.
+Este proyecto está bajo la licencia [MIT](LICENSE).
