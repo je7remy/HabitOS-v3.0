@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#07070f">
+<title>HabitOS</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07070f;--panel:#0c0c18;--card:#111120;--card2:#15152a;
+  --border:#1e1e38;--border2:#2a2a48;
+  --text:#d8daf0;--muted:#3a3a5a;--muted2:#5a5a80;
+  --lime:#c8f135;--teal:#2de8b0;--pink:#f03672;
+  --orange:#f09836;--blue:#36a8f0;--purple:#a036f0;--yellow:#f0d836;
+  --nav-h:64px;--safe-bottom:env(safe-area-inset-bottom,0px);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Syne',sans-serif;
+  display:flex;flex-direction:column;
+  position:fixed;inset:0;
+}
+
+/* grid bg */
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(200,241,53,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(200,241,53,.018) 1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;z-index:0;
+}
+
+/* ── SCROLL CONTAINER ─────────────────────────────────────────── */
+.screen{
+  position:absolute;inset:0;
+  bottom:calc(var(--nav-h) + var(--safe-bottom));
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  z-index:1;
+  display:none;
+  padding-bottom:12px;
+}
+.screen.active{display:block;}
+
+/* ── TOP BAR ──────────────────────────────────────────────────── */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  background:rgba(7,7,15,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:12px 16px 10px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.topbar-logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.5rem;letter-spacing:.14em;color:var(--lime);line-height:1;
+}
+.topbar-logo span{
+  font-size:.55rem;letter-spacing:.2em;color:var(--muted2);
+  vertical-align:middle;margin-left:6px;font-family:'Syne',sans-serif;font-weight:700;
+}
+
+/* month picker */
+.month-pill{
+  display:flex;align-items:center;gap:6px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:5px 10px;
+}
+.mpill-btn{
+  background:none;border:none;color:var(--teal);
+  font-size:1.1rem;cursor:pointer;line-height:1;
+  width:24px;height:24px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;transition:background .15s;
+}
+.mpill-btn:active{background:rgba(45,232,176,.15);}
+.mpill-name{
+  font-family:'Bebas Neue',sans-serif;font-size:1rem;
+  letter-spacing:.08em;min-width:80px;text-align:center;
+}
+.mpill-year{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted2);}
+
+/* ── TODAY SCREEN ─────────────────────────────────────────────── */
+.today-hero{
+  padding:16px;
+  animation:fadeUp .4s both;
+}
+
+/* ring progress */
+.ring-wrap{
+  display:flex;align-items:center;justify-content:center;
+  gap:20px;margin-bottom:16px;
+}
+.ring-container{position:relative;width:110px;height:110px;flex-shrink:0;}
+.ring-svg{width:110px;height:110px;transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:var(--border);stroke-width:8;}
+.ring-fill{
+  fill:none;stroke-width:8;stroke-linecap:round;
+  stroke-dasharray:283;stroke-dashoffset:283;
+  transition:stroke-dashoffset 1s cubic-bezier(.16,1,.3,1);
+  stroke:var(--lime);
+}
+.ring-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.ring-pct{font-family:'Space Mono',monospace;font-size:1.3rem;font-weight:700;color:var(--lime);}
+.ring-lbl{font-size:.55rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.1em;}
+
+.hero-stats{flex:1;display:flex;flex-direction:column;gap:10px;}
+.hstat{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:9px 12px;
+}
+.hstat-lbl{font-size:.65rem;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.08em;}
+.hstat-val{font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;}
+
+/* global bar */
+.gbar-mob{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:12px 14px;margin:0 16px 14px;
+  animation:fadeUp .4s .05s both;
+}
+.gbar-hdr{display:flex;justify-content:space-between;margin-bottom:7px;}
+.gbar-lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);font-weight:700;}
+.gbar-pct{font-family:'Space Mono',monospace;font-size:.9rem;font-weight:700;color:var(--lime);}
+.gbar-track{height:6px;background:rgba(255,255,255,.04);border-radius:999px;overflow:hidden;}
+.gbar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--teal),var(--lime));transition:width .9s cubic-bezier(.16,1,.3,1);}
+
+/* ── HABIT CARDS (today view) ─────────────────────────────────── */
+.cat-label{
+  padding:6px 16px 4px;
+  font-size:.6rem;text-transform:uppercase;letter-spacing:.14em;
+  color:var(--muted2);font-weight:700;
+}
+
+.habit-card{
+  margin:0 16px 8px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:13px 14px;
+  display:flex;align-items:center;gap:12px;
+  animation:fadeUp .4s both;
+  transition:transform .15s,border-color .15s;
+  position:relative;overflow:hidden;
+}
+.habit-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:3px;border-radius:3px 0 0 3px;
+}
+.habit-card:active{transform:scale(.98);}
+.habit-card.done-card{border-color:rgba(200,241,53,.2);}
+.habit-card.done-card::before{background:var(--lime);}
+
+.hc-emoji{font-size:1.4rem;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hc-body{flex:1;min-width:0;}
+.hc-name{font-size:.88rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hc-meta{
+  display:flex;align-items:center;gap:8px;margin-top:3px;
+}
+.hc-streak{
+  font-family:'Space Mono',monospace;font-size:.6rem;
+  display:flex;align-items:center;gap:3px;
+}
+.hc-prog-mini{
+  flex:1;height:3px;background:rgba(255,255,255,.06);
+  border-radius:999px;overflow:hidden;
+}
+.hc-prog-fill{height:100%;border-radius:999px;transition:width .5s;}
+.hc-pct{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted2);}
+
+/* big check button */
+.hc-check{
+  width:42px;height:42px;border-radius:50%;
+  border:2px solid var(--border2);
+  background:transparent;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .15s;font-size:0;
+}
+.hc-check.done{border-color:transparent;animation:popRing .25s cubic-bezier(.16,1,.3,1);}
+.hc-check.done::after{content:'✓';font-size:1.1rem;font-weight:700;color:#000;}
+.hc-check:not(.done):active{transform:scale(.9);}
+
+/* ── CALENDAR SCREEN ──────────────────────────────────────────── */
+.cal-pad{padding:0 12px 12px;}
+
+/* mini calendar grid */
+.cal-header{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  gap:2px;padding:10px 0 6px;
+}
+.cal-dh{
+  text-align:center;font-size:.58rem;font-weight:700;
+  color:var(--muted2);text-transform:uppercase;
+}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-cell{
+  aspect-ratio:1;border-radius:8px;
+  background:var(--card);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;font-weight:700;color:var(--muted2);
+  cursor:pointer;transition:all .15s;position:relative;
+  border:1px solid transparent;
+}
+.cal-cell.empty{background:transparent;cursor:default;border:none;}
+.cal-cell.today{border-color:var(--lime);color:var(--lime);}
+.cal-cell.future{opacity:.25;cursor:default;}
+.cal-cell.sel{background:var(--lime);color:#000 !important;border-color:var(--lime);}
+.cal-cell.has-data::after{
+  content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;
+}
+.cal-cell:not(.empty):not(.future):active{transform:scale(.9);}
+
+/* selected day habits */
+.sel-day-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 0 10px;
+}
+.sel-day-lbl{
+  font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.1em;color:var(--text);
+}
+.sel-day-pct{
+  font-family:'Space Mono',monospace;font-size:.85rem;font-weight:700;
+}
+
+/* ── DASHBOARD SCREEN ─────────────────────────────────────────── */
+.dash-mob{padding:12px 14px;}
+.dash-section{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:16px;margin-bottom:12px;
+  animation:fadeUp .4s both;
+}
+.ds-title{
+  font-size:.6rem;text-transform:uppercase;letter-spacing:.13em;
+  color:var(--muted2);font-weight:700;margin-bottom:12px;
+}
+.chart-wrap-mob{height:180px;position:relative;}
+
+/* habit analysis rows */
+.ha-row-mob{
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+}
+.ha-emoji-mob{font-size:.9rem;width:20px;text-align:center;flex-shrink:0;}
+.ha-name-mob{font-size:.75rem;font-weight:600;width:120px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ha-track-mob{flex:1;height:6px;background:rgba(255,255,255,.04);border-radius:999px;overflow:hidden;}
+.ha-fill-mob{height:100%;border-radius:999px;transition:width .8s cubic-bezier(.16,1,.3,1);}
+.ha-pct-mob{font-family:'Space Mono',monospace;font-size:.62rem;color:var(--muted);width:28px;text-align:right;flex-shrink:0;}
+
+/* heatmap */
+.hm-days-mob{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;}
+.hm-dl-mob{font-size:.56rem;color:var(--muted);text-align:center;font-weight:700;text-transform:uppercase;}
+.hm-grid-mob{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.hm-cell-mob{aspect-ratio:1;border-radius:3px;background:rgba(255,255,255,.03);}
+
+/* bw items */
+.bw-mob{
+  display:flex;align-items:center;gap:8px;padding:7px 0;
+  border-bottom:1px solid var(--border);
+}
+.bw-mob:last-child{border-bottom:none;}
+.bw-rank-mob{font-size:.75rem;width:20px;text-align:center;}
+.bw-name-mob{font-size:.78rem;font-weight:600;flex:1;}
+.bw-pct-mob{font-family:'Space Mono',monospace;font-size:.72rem;font-weight:700;}
+
+/* ── SETTINGS SCREEN ──────────────────────────────────────────── */
+.settings-pad{padding:14px;}
+.set-section{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;margin-bottom:12px;
+}
+.set-title{
+  padding:12px 16px;
+  font-size:.6rem;text-transform:uppercase;letter-spacing:.13em;
+  color:var(--muted2);font-weight:700;
+  border-bottom:1px solid var(--border);
+}
+.set-row{
+  display:flex;align-items:center;padding:14px 16px;
+  border-bottom:1px solid var(--border);gap:12px;
+}
+.set-row:last-child{border-bottom:none;}
+.set-row-icon{font-size:1.1rem;width:24px;text-align:center;}
+.set-row-body{flex:1;}
+.set-row-lbl{font-size:.85rem;font-weight:700;}
+.set-row-sub{font-size:.68rem;color:var(--muted2);margin-top:2px;}
+.set-row-action{color:var(--muted2);font-size:.8rem;}
+
+.add-form{padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+.add-field{display:flex;gap:8px;}
+.set-input{
+  flex:1;background:var(--card2);border:1px solid var(--border2);
+  color:var(--text);padding:10px 12px;border-radius:10px;
+  font-family:'Syne',sans-serif;font-size:.88rem;outline:none;
+}
+.set-input:focus{border-color:var(--lime);}
+.set-input::placeholder{color:var(--muted);}
+.emoji-field{
+  width:48px;text-align:center;
+  background:var(--card2);border:1px solid var(--border2);
+  color:var(--text);padding:10px;border-radius:10px;font-size:1.1rem;outline:none;
+}
+.color-row-mob{display:flex;gap:6px;flex-wrap:wrap;}
+.cdot-mob{
+  width:26px;height:26px;border-radius:50%;cursor:pointer;
+  border:2px solid transparent;transition:transform .15s;
+  display:flex;align-items:center;justify-content:center;
+}
+.cdot-mob:active{transform:scale(.85);}
+.cdot-mob.sel::after{content:'✓';font-size:.7rem;font-weight:700;color:#000;}
+.set-btn{
+  background:var(--lime);border:none;color:#000;
+  padding:12px;border-radius:12px;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:.85rem;
+  cursor:pointer;width:100%;transition:opacity .2s;
+}
+.set-btn:active{opacity:.8;}
+.set-btn-ghost{
+  background:transparent;border:1px solid var(--border2);color:var(--muted2);
+  padding:12px;border-radius:12px;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;
+  cursor:pointer;width:100%;transition:all .2s;
+}
+.set-btn-ghost.danger{border-color:var(--pink);color:var(--pink);}
+.set-btn-ghost:active{opacity:.7;}
+
+/* habit list in settings */
+.habit-row-set{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;border-bottom:1px solid var(--border);
+}
+.habit-row-set:last-child{border-bottom:none;}
+.hr-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.hr-emoji{font-size:1rem;}
+.hr-name{flex:1;font-size:.82rem;font-weight:600;}
+.hr-del{
+  background:none;border:none;color:var(--muted);
+  font-size:.8rem;cursor:pointer;padding:4px 8px;
+  border-radius:6px;transition:all .15s;
+}
+.hr-del:active{background:var(--pink-dim);color:var(--pink);}
+
+/* ── BOTTOM NAV ───────────────────────────────────────────────── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  height:calc(var(--nav-h) + var(--safe-bottom));
+  padding-bottom:var(--safe-bottom);
+  background:rgba(11,11,22,.95);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);
+  display:flex;align-items:flex-start;justify-content:space-around;
+  padding-top:8px;z-index:100;
+}
+.nav-item{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  flex:1;cursor:pointer;padding:4px 0;
+  transition:opacity .15s;border:none;background:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.nav-item:active{opacity:.6;}
+.nav-icon{font-size:1.3rem;line-height:1;transition:transform .2s;}
+.nav-lbl{
+  font-size:.52rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--muted2);transition:color .2s;
+}
+.nav-item.active .nav-icon{transform:translateY(-2px);}
+.nav-item.active .nav-lbl{color:var(--lime);}
+
+/* ── TOAST ────────────────────────────────────────────────────── */
+.toast-mob{
+  position:fixed;bottom:calc(var(--nav-h) + var(--safe-bottom) + 12px);
+  left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--card);border:1px solid var(--lime);
+  color:var(--text);padding:9px 18px;border-radius:20px;
+  font-size:.8rem;font-weight:700;white-space:nowrap;
+  opacity:0;transition:all .35s cubic-bezier(.16,1,.3,1);
+  z-index:200;pointer-events:none;
+}
+.toast-mob.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+/* ── IMPORT MODAL ─────────────────────────────────────────────── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.85);z-index:500;
+  align-items:flex-end;justify-content:center;
+}
+.modal-overlay.show{display:flex;}
+.modal-sheet{
+  background:var(--card);border-radius:20px 20px 0 0;
+  border:1px solid var(--border2);border-bottom:none;
+  width:100%;max-height:85vh;overflow-y:auto;
+  padding:20px 18px calc(20px + var(--safe-bottom));
+  animation:slideUp .35s cubic-bezier(.16,1,.3,1);
+}
+.modal-handle{
+  width:36px;height:4px;border-radius:2px;
+  background:var(--border2);margin:0 auto 18px;
+}
+.modal-title{
+  font-family:'Bebas Neue',sans-serif;font-size:1.4rem;
+  letter-spacing:.1em;color:var(--orange);margin-bottom:4px;
+}
+.modal-sub{font-size:.72rem;color:var(--muted2);line-height:1.5;margin-bottom:16px;}
+
+.drop-zone-mob{
+  border:2px dashed var(--border2);border-radius:12px;
+  padding:28px 16px;text-align:center;cursor:pointer;
+  transition:all .2s;margin-bottom:14px;
+}
+.drop-zone-mob:active{background:rgba(240,152,54,.05);border-color:var(--orange);}
+
+/* ── ANIMATIONS ───────────────────────────────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+@keyframes popRing{0%{transform:scale(.5);}60%{transform:scale(1.25);}100%{transform:scale(1);}}
+@keyframes rowFlash{from{background:rgba(200,241,53,.08);}to{background:var(--card);}}
+.flash{animation:rowFlash .5s ease-out forwards;}
+
+/* scrollbar */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- ═══ TODAY SCREEN ═══════════════════════════════════════════ -->
+<div class="screen active" id="scr-today">
+  <div class="topbar">
+    <div class="topbar-logo">HabitOS <span>v3</span></div>
+    <div class="month-pill">
+      <button class="mpill-btn" id="prevM">‹</button>
+      <span class="mpill-name" id="mName"></span>
+      <span class="mpill-year" id="yTag"></span>
+      <button class="mpill-btn" id="nextM">›</button>
+    </div>
+  </div>
+
+  <div class="today-hero">
+    <div class="ring-wrap">
+      <div class="ring-container">
+        <svg class="ring-svg" viewBox="0 0 100 100">
+          <circle class="ring-bg" cx="50" cy="50" r="45"/>
+          <circle class="ring-fill" id="ringFill" cx="50" cy="50" r="45"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-pct" id="ringPct">0%</div>
+          <div class="ring-lbl">hoy</div>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="hstat">
+          <span class="hstat-lbl">Racha</span>
+          <span class="hstat-val" id="hStatStreak" style="color:var(--orange)">0d</span>
+        </div>
+        <div class="hstat">
+          <span class="hstat-lbl">Checks mes</span>
+          <span class="hstat-val" id="hStatChecks" style="color:var(--teal)">0</span>
+        </div>
+        <div class="hstat">
+          <span class="hstat-lbl">Progreso mes</span>
+          <span class="hstat-val" id="hStatMes" style="color:var(--lime)">0%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gbar-mob">
+    <div class="gbar-hdr">
+      <span class="gbar-lbl">Progreso del mes</span>
+      <span class="gbar-pct" id="gPctMob">0%</span>
+    </div>
+    <div class="gbar-track"><div class="gbar-fill" id="gBarMob" style="width:0%"></div></div>
+  </div>
+
+  <div id="habitList"></div>
+</div>
+
+<!-- ═══ CALENDAR SCREEN ════════════════════════════════════════ -->
+<div class="screen" id="scr-cal">
+  <div class="topbar">
+    <div class="topbar-logo">Calendario</div>
+    <div class="month-pill">
+      <button class="mpill-btn" id="prevM2">‹</button>
+      <span class="mpill-name" id="mName2"></span>
+      <span class="mpill-year" id="yTag2"></span>
+      <button class="mpill-btn" id="nextM2">›</button>
+    </div>
+  </div>
+  <div class="cal-pad">
+    <div class="cal-header" id="calDayHeaders"></div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="sel-day-header">
+      <span class="sel-day-lbl" id="selDayLbl">—</span>
+      <span class="sel-day-pct" id="selDayPct" style="color:var(--lime)">—</span>
+    </div>
+    <div id="selDayHabits"></div>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD SCREEN ═══════════════════════════════════════ -->
+<div class="screen" id="scr-dash">
+  <div class="topbar">
+    <div class="topbar-logo">Dashboard</div>
+    <div class="month-pill">
+      <button class="mpill-btn" id="prevM3">‹</button>
+      <span class="mpill-name" id="mName3"></span>
+      <span class="mpill-year" id="yTag3"></span>
+      <button class="mpill-btn" id="nextM3">›</button>
+    </div>
+  </div>
+  <div class="dash-mob">
+    <div class="dash-section">
+      <div class="ds-title">📈 Progreso diario</div>
+      <div class="chart-wrap-mob"><canvas id="lineChart"></canvas></div>
+    </div>
+    <div class="dash-section">
+      <div class="ds-title">🏆 Por hábito</div>
+      <div id="haRowsMob"></div>
+    </div>
+    <div class="dash-section">
+      <div class="ds-title">🔥 Mapa de calor (35 días)</div>
+      <div class="hm-days-mob" id="hmDaysMob"></div>
+      <div class="hm-grid-mob" id="hmGridMob"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="dash-section" style="margin-bottom:0;">
+        <div class="ds-title">⬆️ Mejores</div>
+        <div id="topMob"></div>
+      </div>
+      <div class="dash-section" style="margin-bottom:0;">
+        <div class="ds-title">⚠️ Atención</div>
+        <div id="botMob"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS SCREEN ════════════════════════════════════════ -->
+<div class="screen" id="scr-set">
+  <div class="topbar">
+    <div class="topbar-logo">Ajustes</div>
+  </div>
+  <div class="settings-pad">
+
+    <!-- Add habit -->
+    <div class="set-section">
+      <div class="set-title">➕ Agregar hábito</div>
+      <div class="add-form">
+        <div class="add-field">
+          <input class="set-input" id="nameIn" placeholder="Nombre del hábito..." maxlength="40">
+          <input class="emoji-field" id="emojiIn" value="⭐" maxlength="2">
+        </div>
+        <div class="color-row-mob" id="colorPick"></div>
+        <button class="set-btn" onclick="addHabit()">+ Agregar hábito</button>
+      </div>
+    </div>
+
+    <!-- Habits list -->
+    <div class="set-section">
+      <div class="set-title">📋 Mis hábitos (<span id="habitCount">0</span>)</div>
+      <div id="habitSetList"></div>
+    </div>
+
+    <!-- Data -->
+    <div class="set-section">
+      <div class="set-title">💾 Datos</div>
+      <div class="set-row" onclick="exportCSV()">
+        <div class="set-row-icon">↓</div>
+        <div class="set-row-body">
+          <div class="set-row-lbl">Exportar CSV</div>
+          <div class="set-row-sub">Guarda tus datos en la nube</div>
+        </div>
+        <div class="set-row-action">›</div>
+      </div>
+      <div class="set-row" onclick="openImport()">
+        <div class="set-row-icon">↑</div>
+        <div class="set-row-body">
+          <div class="set-row-lbl">Importar CSV</div>
+          <div class="set-row-sub">Restaura desde archivo guardado</div>
+        </div>
+        <div class="set-row-action">›</div>
+      </div>
+    </div>
+
+    <div style="height:8px;"></div>
+  </div>
+</div>
+
+<!-- ═══ BOTTOM NAV ══════════════════════════════════════════════ -->
+<nav class="bottom-nav">
+  <button class="nav-item active" data-scr="today">
+    <span class="nav-icon">🏠</span>
+    <span class="nav-lbl">Hoy</span>
+  </button>
+  <button class="nav-item" data-scr="cal">
+    <span class="nav-icon">📅</span>
+    <span class="nav-lbl">Calendario</span>
+  </button>
+  <button class="nav-item" data-scr="dash">
+    <span class="nav-icon">📊</span>
+    <span class="nav-lbl">Stats</span>
+  </button>
+  <button class="nav-item" data-scr="set">
+    <span class="nav-icon">⚙️</span>
+    <span class="nav-lbl">Ajustes</span>
+  </button>
+</nav>
+
+<div class="toast-mob" id="toast"></div>
+
+<!-- ═══ IMPORT MODAL ════════════════════════════════════════════ -->
+<div class="modal-overlay" id="importOverlay" onclick="if(event.target===this)closeImport()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">↑ Importar CSV</div>
+    <div class="modal-sub">Restaura tus datos desde un archivo exportado por HabitOS. Funciona con cualquier mes.</div>
+
+    <div class="drop-zone-mob" onclick="document.getElementById('csvFileIn').click()">
+      <div style="font-size:2rem;margin-bottom:8px;">📂</div>
+      <div style="font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:4px;">Toca para seleccionar el archivo</div>
+      <div style="font-size:.68rem;color:var(--muted2);">Archivos .csv de HabitOS</div>
+      <input id="csvFileIn" type="file" accept=".csv" style="display:none" onchange="handleFileSelect(event)">
+    </div>
+
+    <div id="importPreview" style="display:none;">
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:.58rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted2);font-weight:700;margin-bottom:10px;">Vista previa</div>
+        <div id="previewContent"></div>
+      </div>
+      <div style="background:rgba(240,152,54,.07);border:1px solid rgba(240,152,54,.2);border-radius:10px;padding:12px;margin-bottom:14px;">
+        <div style="font-size:.7rem;color:var(--orange);font-weight:700;margin-bottom:5px;">⚠️ Elige cómo importar</div>
+        <div style="font-size:.68rem;color:var(--muted2);line-height:1.6;" id="importWarning"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="confirmImport('merge')" style="flex:1;background:var(--card2);border:1px solid var(--teal);color:var(--teal);padding:12px;border-radius:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;">
+          🔀 Combinar
+        </button>
+        <button onclick="confirmImport('replace')" style="flex:1;background:var(--orange);border:none;color:#000;padding:12px;border-radius:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;">
+          ↻ Reemplazar
+        </button>
+      </div>
+    </div>
+    <div id="importEmpty" style="font-size:.73rem;color:var(--muted2);text-align:center;padding:4px 0;">
+      Selecciona un archivo para continuar
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  HABITS DEFINITION
+// ═══════════════════════════════════════════════════════════════
+const HABIT_GROUPS = [
+  { cat:"🎯 Objetivos Principales", habits:[
+    {id:"tesis",    name:"Tesis",                           emoji:"📝", color:"#c8f135"},
+    {id:"ejercicio",name:"Ejercicio",                       emoji:"💪", color:"#2de8b0"},
+  ]},
+  { cat:"😴 Sueño & Descanso", habits:[
+    {id:"dormir8",  name:"Dormir 8 horas",                  emoji:"😴", color:"#36a8f0"},
+    {id:"temprano", name:"Acostarse temprano (antes 11pm)", emoji:"🌙", color:"#a036f0"},
+    {id:"despertar",name:"Levantarse temprano (antes 6am)", emoji:"🌅", color:"#f0d836"},
+  ]},
+  { cat:"📚 Mente & Conocimiento", habits:[
+    {id:"leer",      name:"Leer",                           emoji:"📖", color:"#36a8f0"},
+    {id:"meditacion",name:"Meditación",                    emoji:"🧘", color:"#a036f0"},
+    {id:"proposito", name:"Propósito sólido",              emoji:"🎯", color:"#c8f135"},
+  ]},
+  { cat:"💪 Disciplina & Control", habits:[
+    {id:"dieta",    name:"No comer en exceso",              emoji:"🥗", color:"#2de8b0"},
+    {id:"noporno",  name:"No porno",                        emoji:"🚫", color:"#f03672"},
+    {id:"noentrete",name:"No entretenimiento pasivo",       emoji:"📵", color:"#f09836"},
+    {id:"noalcohol",name:"No alcohol",                      emoji:"🍃", color:"#2de8b0"},
+  ]},
+  { cat:"🌱 Entorno & Conexión", habits:[
+    {id:"circulo",  name:"Buen círculo",                    emoji:"🤝", color:"#f0d836"},
+  ]},
+];
+
+const ALL_DEF = [];
+HABIT_GROUPS.forEach(g => g.habits.forEach(h => ALL_DEF.push({...h, cat:g.cat})));
+
+// ═══════════════════════════════════════════════════════════════
+//  STATE — same localStorage keys as desktop version
+// ═══════════════════════════════════════════════════════════════
+const SK_HABITS='hos3_habits', SK_CHECKS='hos3_checks';
+let habits = JSON.parse(localStorage.getItem(SK_HABITS)||'null');
+let checks = JSON.parse(localStorage.getItem(SK_CHECKS)||'{}');
+if(!habits){ habits=ALL_DEF.map(h=>({...h})); save(); }
+
+const PALETTE=['#c8f135','#2de8b0','#f03672','#f09836','#36a8f0','#a036f0','#f0d836','#f03636'];
+let selColor=PALETTE[0];
+let pendingImport=null;
+let selDay=null; // selected day in calendar
+let lineChartObj=null;
+
+const now=new Date();
+let vy=now.getFullYear(), vm=now.getMonth();
+
+const MONTHS=['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+              'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DAYS_ES=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
+
+// ═══════════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════════
+function save(){ localStorage.setItem(SK_HABITS,JSON.stringify(habits)); localStorage.setItem(SK_CHECKS,JSON.stringify(checks)); }
+function daysIn(y,m){ return new Date(y,m+1,0).getDate(); }
+function ck(hi,d,y,m){ return `${y??vy}-${m??vm}-${hi}-${d}`; }
+function isChk(hi,d,y,m){ return !!checks[ck(hi,d,y,m)]; }
+function todayD(){ return (now.getFullYear()===vy&&now.getMonth()===vm)?now.getDate():-1; }
+function pct(a,b){ return b?Math.round(a/b*100):0; }
+function dow(y,m,d){ return new Date(y,m,d).getDay(); }
+
+function habitPct(hi){
+  const days=daysIn(vy,vm),td=todayD(),past=td>0?td:days;
+  let done=0; for(let d=1;d<=past;d++) if(isChk(hi,d)) done++;
+  return pct(done,past);
+}
+function habitStreak(hi){
+  let s=0; const d=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  for(let i=0;i<120;i++){
+    if(checks[`${d.getFullYear()}-${d.getMonth()}-${hi}-${d.getDate()}`]) s++;
+    else if(i>0) break;
+    d.setDate(d.getDate()-1);
+  }
+  return s;
+}
+function globalStreak(){
+  if(!habits.length) return 0;
+  let s=0; const d=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  for(let i=0;i<90;i++){
+    const dy=d.getFullYear(),dm=d.getMonth(),dd=d.getDate();
+    let done=0; habits.forEach((_,hi)=>{ if(checks[`${dy}-${dm}-${hi}-${dd}`]) done++; });
+    if(done/habits.length>=.5) s++;
+    else if(i>0) break;
+    d.setDate(d.getDate()-1);
+  }
+  return s;
+}
+
+function barGrad(p){
+  if(p>=80) return 'linear-gradient(90deg,#2de8b0,#c8f135)';
+  if(p>=50) return 'linear-gradient(90deg,#f0d836,#c8f135)';
+  return 'linear-gradient(90deg,#f03636,#f09836)';
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════════════════════════
+let curScr='today';
+function goTo(scr){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('scr-'+scr).classList.add('active');
+  document.querySelector(`.nav-item[data-scr="${scr}"]`).classList.add('active');
+  curScr=scr;
+  if(scr==='dash') renderDashboard();
+  if(scr==='cal') renderCal();
+  if(scr==='set') renderSettings();
+}
+
+document.querySelectorAll('.nav-item').forEach(n=>{
+  n.onclick=()=>goTo(n.dataset.scr);
+});
+
+// month nav — sync all screens
+function setMonth(dy,dm){
+  vy=dy; vm=dm;
+  ['mName','mName2','mName3'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.textContent=MONTHS[vm];
+  });
+  ['yTag','yTag2','yTag3'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.textContent=vy;
+  });
+  selDay=null;
+  renderAll();
+}
+
+[['prevM','nextM'],['prevM2','nextM2'],['prevM3','nextM3']].forEach(([p,n])=>{
+  const pe=document.getElementById(p), ne=document.getElementById(n);
+  if(pe) pe.onclick=()=>{ let m=vm-1,y=vy; if(m<0){m=11;y--;} setMonth(y,m); };
+  if(ne) ne.onclick=()=>{ let m=vm+1,y=vy; if(m>11){m=0;y++;} setMonth(y,m); };
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER TODAY
+// ═══════════════════════════════════════════════════════════════
+function renderToday(){
+  const td=todayD(), days=daysIn(vy,vm);
+  const past=td>0?td:days;
+
+  // Ring
+  let todayDone=0, todayTotal=habits.length;
+  if(td>0) habits.forEach((_,hi)=>{ if(isChk(hi,td)) todayDone++; });
+  const todayPct=pct(todayDone,todayTotal);
+  const circumference=283;
+  const offset=circumference-(circumference*(todayPct/100));
+  document.getElementById('ringFill').style.strokeDashoffset=offset;
+  document.getElementById('ringPct').textContent=todayPct+'%';
+
+  // Stats
+  let totalDone=0;
+  habits.forEach((_,hi)=>{ for(let d=1;d<=past;d++) if(isChk(hi,d)) totalDone++; });
+  const globalPct=pct(totalDone,habits.length*past);
+  document.getElementById('hStatStreak').textContent=globalStreak()+'d';
+  document.getElementById('hStatChecks').textContent=totalDone;
+  document.getElementById('hStatMes').textContent=globalPct+'%';
+  document.getElementById('gPctMob').textContent=globalPct+'%';
+  document.getElementById('gBarMob').style.width=globalPct+'%';
+
+  // Habit cards grouped
+  const byGroup={};
+  const catOrder=[];
+  habits.forEach((h,hi)=>{
+    const cat=h.cat||'📋 Otros';
+    if(!byGroup[cat]){byGroup[cat]=[];catOrder.push(cat);}
+    byGroup[cat].push({h,hi});
+  });
+
+  let html='';
+  catOrder.forEach(cat=>{
+    html+=`<div class="cat-label">${cat}</div>`;
+    byGroup[cat].forEach(({h,hi},i)=>{
+      const chk=td>0?isChk(hi,td):false;
+      const hp=habitPct(hi), hst=habitStreak(hi);
+      const streakColor=hst>=7?'#c8f135':hst>=3?'#f09836':'#3a3a5a';
+      const delay=i*0.04;
+      html+=`
+        <div class="habit-card${chk?' done-card':''}" id="hc-${hi}"
+          style="animation-delay:${delay}s;--hcolor:${h.color}">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;background:${chk?h.color:'transparent'}"></div>
+          <div class="hc-emoji">${h.emoji}</div>
+          <div class="hc-body">
+            <div class="hc-name">${h.name}</div>
+            <div class="hc-meta">
+              <span class="hc-streak" style="color:${streakColor}">🔥${hst}d</span>
+              <div class="hc-prog-mini">
+                <div class="hc-prog-fill" style="width:${hp}%;background:${h.color}"></div>
+              </div>
+              <span class="hc-pct">${hp}%</span>
+            </div>
+          </div>
+          <button class="hc-check${chk?' done':''}"
+            style="${chk?`background:${h.color};`:''}"
+            onclick="toggleMob(${hi})"
+            ${td<0?'disabled':''}
+          ></button>
+        </div>
+      `;
+    });
+  });
+
+  document.getElementById('habitList').innerHTML=html;
+}
+
+function toggleMob(hi){
+  const td=todayD();
+  if(td<0){ toast('No puedes editar meses futuros o pasados aquí'); return; }
+  const k=ck(hi,td);
+  checks[k]=!checks[k];
+  if(!checks[k]) delete checks[k];
+  save(); renderToday();
+  const card=document.getElementById(`hc-${hi}`);
+  if(card){ card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER CALENDAR
+// ═══════════════════════════════════════════════════════════════
+function renderCal(){
+  const days=daysIn(vy,vm), td=todayD(), past=td>0?td:days;
+
+  // Day headers
+  document.getElementById('calDayHeaders').innerHTML=
+    DAYS_ES.map(d=>`<div class="cal-dh">${d}</div>`).join('');
+
+  // Grid
+  const firstDow=dow(vy,vm,1);
+  let html='';
+  for(let p=0;p<firstDow;p++) html+=`<div class="cal-cell empty"></div>`;
+
+  for(let d=1;d<=days;d++){
+    const isT=(td===d);
+    const isFut=td>0&&d>td;
+    const isSel=selDay===d;
+
+    // compute day completion
+    let dn=0;
+    if(!isFut) habits.forEach((_,hi)=>{ if(isChk(hi,d)) dn++; });
+    const dp=pct(dn,habits.length);
+    const hasData=dn>0;
+    let dotColor='transparent';
+    if(hasData){ dotColor=dp>=80?'#c8f135':dp>=50?'#f0d836':'#f09836'; }
+
+    let cls='cal-cell';
+    if(isT) cls+=' today';
+    if(isFut) cls+=' future';
+    if(isSel) cls+=' sel';
+    if(hasData&&!isSel) cls+=' has-data';
+
+    html+=`<div class="${cls}"
+      onclick="${isFut?'':`selectDay(${d})`}"
+      style="${hasData&&!isSel?`--dot:${dotColor};`:''}"
+      data-dp="${dp}"
+    >${d}</div>`;
+  }
+
+  // set ::after color via style
+  document.getElementById('calGrid').innerHTML=html;
+  document.querySelectorAll('.cal-cell.has-data').forEach(cell=>{
+    const dp=parseInt(cell.dataset.dp||0);
+    const col=dp>=80?'#c8f135':dp>=50?'#f0d836':'#f09836';
+    cell.style.setProperty('--dot-color',col);
+  });
+
+  // inject dot style
+  if(!document.getElementById('calDotStyle')){
+    const s=document.createElement('style');
+    s.id='calDotStyle';
+    s.textContent='.cal-cell.has-data::after{background:var(--dot-color,#c8f135);}';
+    document.head.appendChild(s);
+  }
+
+  renderSelDay();
+}
+
+function selectDay(d){
+  selDay=d;
+  renderCal();
+}
+
+function renderSelDay(){
+  const td=todayD(), days=daysIn(vy,vm);
+  const d=selDay||(td>0?td:1);
+
+  const MONTHS_FULL=MONTHS;
+  document.getElementById('selDayLbl').textContent=`${d} de ${MONTHS_FULL[vm]}`;
+
+  let dn=0;
+  const isFut=td>0&&d>td;
+  if(!isFut) habits.forEach((_,hi)=>{ if(isChk(hi,d)) dn++; });
+  const dp=pct(dn,habits.length);
+  const col=dp>=80?'#c8f135':dp>=50?'#f0d836':'#f03672';
+  document.getElementById('selDayPct').textContent=isFut?'—':dp+'%';
+  document.getElementById('selDayPct').style.color=col;
+
+  let html='';
+  habits.forEach((h,hi)=>{
+    const chk=!isFut&&isChk(hi,d);
+    html+=`
+      <div class="habit-card${chk?' done-card':''}" style="margin-bottom:8px;">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;background:${chk?h.color:'transparent'}"></div>
+        <div class="hc-emoji">${h.emoji}</div>
+        <div class="hc-body">
+          <div class="hc-name">${h.name}</div>
+        </div>
+        <button class="hc-check${chk?' done':''}"
+          style="${chk?`background:${h.color};`:''}"
+          onclick="toggleDay(${hi},${d})"
+          ${isFut?'disabled':''}
+        ></button>
+      </div>
+    `;
+  });
+  document.getElementById('selDayHabits').innerHTML=html;
+}
+
+function toggleDay(hi,d){
+  const k=ck(hi,d);
+  checks[k]=!checks[k];
+  if(!checks[k]) delete checks[k];
+  save(); renderSelDay(); renderCal();
+  if(curScr==='today') renderToday();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+function renderDashboard(){
+  const days=daysIn(vy,vm),td=todayD(),past=td>0?td:days;
+
+  // Line chart
+  const labels=[],data=[];
+  for(let d=1;d<=past;d++){
+    labels.push(d);
+    let dn=0; habits.forEach((_,hi)=>{ if(isChk(hi,d)) dn++; });
+    data.push(habits.length?pct(dn,habits.length):0);
+  }
+  if(lineChartObj) lineChartObj.destroy();
+  const ctx=document.getElementById('lineChart').getContext('2d');
+  const grad=ctx.createLinearGradient(0,0,0,180);
+  grad.addColorStop(0,'rgba(200,241,53,.2)');grad.addColorStop(1,'rgba(200,241,53,.01)');
+  Chart.defaults.color='#3a3a5a';Chart.defaults.borderColor='rgba(255,255,255,.04)';
+  lineChartObj=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[{label:'%',data,fill:true,backgroundColor:grad,
+      borderColor:'#c8f135',borderWidth:2,pointRadius:2,pointHoverRadius:5,tension:.4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{
+        backgroundColor:'#111120',borderColor:'#1e1e38',borderWidth:1,
+        titleColor:'#c8f135',bodyColor:'#d8daf0',
+        callbacks:{label:c=>`${c.parsed.y}% completado`}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.02)'},ticks:{font:{family:'Space Mono',size:8},maxTicksLimit:8}},
+        y:{min:0,max:100,grid:{color:'rgba(255,255,255,.04)'},
+           ticks:{font:{family:'Space Mono',size:8},callback:v=>v+'%'}}
+      }}
+  });
+
+  // Habit analysis
+  const ranked=[...habits.map((h,hi)=>({h,hi,p:habitPct(hi),st:habitStreak(hi)}))].sort((a,b)=>b.p-a.p);
+  document.getElementById('haRowsMob').innerHTML=ranked.map(({h,hi,p,st})=>`
+    <div class="ha-row-mob">
+      <div class="ha-emoji-mob">${h.emoji}</div>
+      <div class="ha-name-mob">${h.name}</div>
+      <div class="ha-track-mob"><div class="ha-fill-mob" style="width:${p}%;background:${h.color||'#c8f135'}"></div></div>
+      <div class="ha-pct-mob">${p}%</div>
+    </div>
+  `).join('');
+
+  // Heatmap
+  document.getElementById('hmDaysMob').innerHTML=
+    ['Do','Lu','Ma','Mi','Ju','Vi','Sá'].map(d=>`<div class="hm-dl-mob">${d}</div>`).join('');
+  const start=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  start.setDate(start.getDate()-34);
+  const pad=start.getDay(); let hmH='';
+  for(let p=0;p<pad;p++) hmH+=`<div></div>`;
+  for(let i=0;i<35;i++){
+    const d2=new Date(start); d2.setDate(d2.getDate()+i);
+    const dy=d2.getFullYear(),dm=d2.getMonth(),dd=d2.getDate();
+    let dn=0; habits.forEach((_,hi)=>{ if(checks[`${dy}-${dm}-${hi}-${dd}`]) dn++; });
+    const dp=habits.length?pct(dn,habits.length):0;
+    let bg='rgba(255,255,255,.03)';
+    if(dp>=80) bg='#c8f135';
+    else if(dp>=60) bg='#86b020';
+    else if(dp>=40) bg='#465c10';
+    else if(dp>0) bg='#252e08';
+    hmH+=`<div class="hm-cell-mob" style="background:${bg}" title="${dd}/${dm+1}: ${dp}%"></div>`;
+  }
+  document.getElementById('hmGridMob').innerHTML=hmH;
+
+  // Top/bottom
+  const sorted=[...habits.map((h,hi)=>({h,hi,p:habitPct(hi)}))].sort((a,b)=>b.p-a.p);
+  const medals=['🥇','🥈','🥉','4️⃣','5️⃣'];
+  function bwH(list,icons){
+    return list.map(({h,p},i)=>`
+      <div class="bw-mob">
+        <span class="bw-rank-mob">${icons[i]}</span>
+        <span style="font-size:.85rem">${h.emoji}</span>
+        <span class="bw-name-mob" style="color:${h.color}">${h.name}</span>
+        <span class="bw-pct-mob" style="color:${h.color}">${p}%</span>
+      </div>
+    `).join('');
+  }
+  document.getElementById('topMob').innerHTML=bwH(sorted.slice(0,5),medals);
+  document.getElementById('botMob').innerHTML=bwH([...sorted].reverse().slice(0,5),['⚠️','⚠️','⚠️','⚠️','⚠️']);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER SETTINGS
+// ═══════════════════════════════════════════════════════════════
+function renderSettings(){
+  document.getElementById('habitCount').textContent=habits.length;
+  document.getElementById('habitSetList').innerHTML=habits.map((h,hi)=>`
+    <div class="habit-row-set">
+      <span class="hr-dot" style="background:${h.color}"></span>
+      <span class="hr-emoji">${h.emoji}</span>
+      <span class="hr-name">${h.name}</span>
+      <button class="hr-del" onclick="delH(${hi})">✕</button>
+    </div>
+  `).join('');
+}
+
+function buildColorPick(){
+  document.getElementById('colorPick').innerHTML=PALETTE.map(c=>`
+    <div class="cdot-mob${c===selColor?' sel':''}"
+      style="background:${c}"
+      onclick="selColor='${c}';buildColorPick()"></div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ACTIONS
+// ═══════════════════════════════════════════════════════════════
+function addHabit(){
+  const name=document.getElementById('nameIn').value.trim();
+  const emoji=document.getElementById('emojiIn').value.trim()||'⭐';
+  if(!name){toast('✏️ Escribe el nombre del hábito');return;}
+  const idx=PALETTE.indexOf(selColor);
+  habits.push({id:`custom_${Date.now()}`,name,emoji,color:selColor,cat:'📋 Personalizados'});
+  save();
+  document.getElementById('nameIn').value='';
+  selColor=PALETTE[(idx+1)%PALETTE.length];
+  buildColorPick();
+  renderSettings();
+  renderToday();
+  toast(`✓ "${name}" agregado`);
+}
+
+function delH(idx){
+  const name=habits[idx].name;
+  habits.splice(idx,1);
+  const nc={};
+  Object.entries(checks).forEach(([k,v])=>{
+    const p=k.split('-'); const hi=parseInt(p[2]);
+    if(hi===idx) return;
+    nc[`${p[0]}-${p[1]}-${hi>idx?hi-1:hi}-${p[3]}`]=v;
+  });
+  checks=nc; save(); renderSettings(); renderToday();
+  toast(`🗑 "${name}" eliminado`);
+}
+
+function exportCSV(){
+  const days=daysIn(vy,vm),td=todayD(),past=td>0?td:days;
+  let csv=`HabitOS Export — ${MONTHS[vm]} ${vy}\n`;
+  csv+=`Hábito,Emoji,Color,Categoría,`+Array.from({length:days},(_,i)=>i+1).join(',')+`,Progreso%\n`;
+  habits.forEach((h,hi)=>{
+    let done=0;
+    const row=[h.name,h.emoji,h.color,h.cat||''];
+    for(let d=1;d<=days;d++){const v=isChk(hi,d)?1:0;row.push(v);if(d<=past&&v)done++;}
+    row.push(pct(done,past)+'%');
+    csv+=row.map(v=>`"${v}"`).join(',')+'\n';
+  });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=`habitos_${MONTHS[vm].toLowerCase()}_${vy}.csv`;
+  a.click();
+  toast('📥 CSV exportado');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  IMPORT
+// ═══════════════════════════════════════════════════════════════
+function openImport(){
+  document.getElementById('importOverlay').classList.add('show');
+  document.getElementById('importPreview').style.display='none';
+  document.getElementById('importEmpty').style.display='block';
+  document.getElementById('importEmpty').style.color='var(--muted2)';
+  document.getElementById('importEmpty').textContent='Selecciona un archivo para continuar';
+  document.getElementById('csvFileIn').value='';
+  pendingImport=null;
+}
+function closeImport(){
+  document.getElementById('importOverlay').classList.remove('show');
+  pendingImport=null;
+}
+function handleFileSelect(e){ const f=e.target.files[0]; if(f) processCSVFile(f); }
+function processCSVFile(f){
+  const r=new FileReader();
+  r.onload=e=>parseCSV(e.target.result,f.name);
+  r.readAsText(f,'UTF-8');
+}
+
+function parseCSVRow(line){
+  const result=[]; let cur='',inQ=false,i=0;
+  if(line.charCodeAt(0)===0xFEFF) line=line.slice(1);
+  while(i<line.length){
+    const ch=line[i];
+    if(ch==='"'){ if(inQ&&line[i+1]==='"'){cur+='"';i+=2;continue;} inQ=!inQ;i++;continue; }
+    if(ch===','&&!inQ){result.push(cur);cur='';i++;continue;}
+    cur+=ch;i++;
+  }
+  result.push(cur); return result;
+}
+
+function parseCSV(raw,filename){
+  try {
+    if(raw.charCodeAt(0)===0xFEFF) raw=raw.slice(1);
+    const lines=raw.split(/\r?\n/).filter(l=>l.trim());
+    const MESES=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+    let exportYear=null,exportMonth=null,headerLineIdx=-1,dataStartIdx=-1;
+
+    for(let i=0;i<Math.min(lines.length,5);i++){
+      const row=parseCSVRow(lines[i]);
+      const first=(row[0]||'').trim().toLowerCase();
+      if(first==='hábito'||first==='habito'||first==='h\u00e1bito'){headerLineIdx=i;dataStartIdx=i+1;break;}
+    }
+    for(let i=0;i<(headerLineIdx>=0?headerLineIdx+1:3);i++){
+      const m=lines[i].match(/([A-Za-z\u00e0-\u00ff]+)\s+(\d{4})/i);
+      if(m){
+        const mn=m[1].toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+        const idx=MESES.findIndex(mes=>mes.normalize('NFD').replace(/[\u0300-\u036f]/g,'')==mn);
+        if(idx>=0){exportMonth=idx;exportYear=parseInt(m[2]);break;}
+      }
+    }
+    if(headerLineIdx<0) throw new Error('No se encontró la fila de encabezado.');
+    const headers=parseCSVRow(lines[headerLineIdx]);
+    let dayColStart=-1,dayColEnd=-1;
+    for(let c=0;c<headers.length;c++){
+      const h=headers[c].trim();
+      if(/^\d+$/.test(h)&&parseInt(h)>=1&&parseInt(h)<=31){if(dayColStart<0)dayColStart=c;dayColEnd=c;}
+    }
+    if(dayColStart<0) throw new Error('No se encontraron columnas de días.');
+    const numDays=dayColEnd-dayColStart+1;
+    const impH=[],impC={};
+    for(let i=dataStartIdx;i<lines.length;i++){
+      const row=parseCSVRow(lines[i]);
+      const name=(row[0]||'').trim();
+      if(!name||name.toLowerCase()==='hábito'||name.toLowerCase()==='habito') continue;
+      const emoji=(row[1]||'⭐').trim()||'⭐';
+      const color=/^#[0-9a-fA-F]{6}$/.test((row[2]||'').trim())?row[2].trim():'#c8f135';
+      const cat=(row[3]||'📋 Importados').trim()||'📋 Importados';
+      const hi=impH.length;
+      impH.push({id:`imp_${Date.now()}_${hi}`,name,emoji,color,cat});
+      for(let d=0;d<numDays;d++){
+        if((row[dayColStart+d]||'').trim()==='1'){
+          const y=exportYear??new Date().getFullYear();
+          const m=exportMonth??new Date().getMonth();
+          impC[`${y}-${m}-${hi}-${d+1}`]=true;
+        }
+      }
+    }
+    if(!impH.length) throw new Error('No se encontraron hábitos en el archivo.');
+
+    const totalChks=Object.keys(impC).length;
+    const monthStr=exportMonth!==null?`${MONTHS[exportMonth]} ${exportYear}`:'mes desconocido';
+    pendingImport={habits:impH,checks:impC,month:exportMonth,year:exportYear,numDays,filename};
+
+    document.getElementById('previewContent').innerHTML=`
+      <div style="display:flex;flex-direction:column;gap:0;">
+        ${[['Archivo',filename,'var(--teal)'],['Mes',monthStr,'var(--lime)'],
+           ['Hábitos',impH.length,'var(--orange)'],['Checks',totalChks,'var(--lime)']
+          ].map(([l,v,c])=>`
+          <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:.7rem;color:var(--muted2);">${l}</span>
+            <span style="font-size:.76rem;font-weight:700;color:${c};">${v}</span>
+          </div>`).join('')}
+        <div style="margin-top:10px;">${impH.map(h=>`
+          <div style="display:flex;align-items:center;gap:7px;padding:3px 0;">
+            <span style="width:6px;height:6px;border-radius:50%;background:${h.color};display:inline-block;flex-shrink:0;"></span>
+            <span style="font-size:.78rem;">${h.emoji}  ${h.name}</span>
+          </div>`).join('')}</div>
+      </div>`;
+    document.getElementById('importWarning').innerHTML=
+      `<b>Combinar</b>: agrega los datos de <b>${monthStr}</b> sin tocar otros meses.<br><br>`+
+      `<b>Reemplazar</b>: borra todo y carga solo este CSV.`;
+    document.getElementById('importPreview').style.display='block';
+    document.getElementById('importEmpty').style.display='none';
+  } catch(err){
+    document.getElementById('importEmpty').style.display='block';
+    document.getElementById('importEmpty').style.color='var(--pink)';
+    document.getElementById('importEmpty').textContent='❌ '+err.message;
+    pendingImport=null;
+  }
+}
+
+function confirmImport(mode){
+  if(!pendingImport){toast('⚠️ No hay datos para importar');return;}
+  const{habits:impH,checks:impC,month:impM,year:impY}=pendingImport;
+  if(mode==='replace'){
+    habits=impH; checks=impC;
+  } else {
+    const existingNames=habits.map(h=>h.name.toLowerCase());
+    impH.forEach((ih,oldHi)=>{
+      let targetHi=existingNames.indexOf(ih.name.toLowerCase());
+      if(targetHi<0){targetHi=habits.length;habits.push({...ih});existingNames.push(ih.name.toLowerCase());}
+      Object.entries(impC).forEach(([k,v])=>{
+        const p=k.split('-');
+        if(parseInt(p[2])===oldHi) checks[`${p[0]}-${p[1]}-${targetHi}-${p[3]}`]=v;
+      });
+    });
+  }
+  if(impM!==null){vy=impY;vm=impM;setMonth(impY,impM);}
+  save(); renderAll();
+  closeImport();
+  const mStr=impM!==null?`${MONTHS[impM]} ${impY}`:'datos';
+  toast(`✅ ${mode==='replace'?'Reemplazado':'Combinado'} — ${mStr}`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER ALL
+// ═══════════════════════════════════════════════════════════════
+function renderAll(){
+  ['mName','mName2','mName3'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.textContent=MONTHS[vm];
+  });
+  ['yTag','yTag2','yTag3'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.textContent=vy;
+  });
+  renderToday();
+  if(curScr==='cal') renderCal();
+  if(curScr==='dash') renderDashboard();
+  if(curScr==='set') renderSettings();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+buildColorPick();
+renderAll();
+document.getElementById('nameIn').addEventListener('keydown',e=>{if(e.key==='Enter')addHabit();});
+</script>
+</body>
+</html>

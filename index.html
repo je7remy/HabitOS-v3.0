@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HabitOS v3.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">HabitOS <span>v3.0</span></div>
+    <div class="header-right">
+      <button class="btn-ghost teal" onclick="exportCSV()">↓ Exportar CSV</button>
+      <button class="btn-ghost orange" onclick="openImport()">↑ Importar CSV</button>
+      <div class="month-nav">
+        <button class="month-nav-btn" id="prevM">&#8249;</button>
+        <span class="month-name" id="mName"></span>
+        <span class="year-tag" id="yTag"></span>
+        <button class="month-nav-btn" id="nextM">&#8250;</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" data-tab="tracker">Tracker</button>
+    <button class="tab" data-tab="dashboard">Dashboard</button>
+  </div>
+
+  <!-- ══ TRACKER VIEW ═══════════════════════════════════════════ -->
+  <div class="view active" id="view-tracker">
+
+    <div class="stats-row" id="statsRow">
+      <div class="stat">
+        <div class="stat-lbl">Hábitos</div>
+        <div class="stat-val" id="sH">0</div>
+        <div class="stat-sub">activos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Completados Hoy</div>
+        <div class="stat-val" id="sT">0</div>
+        <div class="stat-sub" id="sTsub">de 0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Mejor Hábito</div>
+        <div class="stat-val stat-val--sm" id="sB">—</div>
+        <div class="stat-sub" id="sBp"></div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Racha Global</div>
+        <div class="stat-val" id="sS">0</div>
+        <div class="stat-sub">días ≥50%</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Total Checks</div>
+        <div class="stat-val" id="sCh">0</div>
+        <div class="stat-sub">este mes</div>
+      </div>
+    </div>
+
+    <div class="gbar-section">
+      <div class="gbar-header">
+        <span class="gbar-lbl">Progreso Global del Mes</span>
+        <span class="gbar-pct" id="gPct">0%</span>
+      </div>
+      <div class="gbar-track">
+        <div class="gbar-fill" id="gBar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="add-row">
+      <input class="add-input" id="nameIn" placeholder="Nombre del hábito..." maxlength="40">
+      <input class="emoji-in" id="emojiIn" value="⭐" maxlength="2">
+      <div class="color-row" id="colorPick"></div>
+      <button class="btn-primary" onclick="addHabit()">+ Agregar</button>
+    </div>
+
+    <div class="table-wrap">
+      <table id="tbl">
+        <thead id="tHead"></thead>
+        <tbody id="tBody"></tbody>
+        <tfoot id="tFoot"></tfoot>
+      </table>
+    </div>
+
+  </div><!-- /tracker -->
+
+  <!-- ══ DASHBOARD VIEW ════════════════════════════════════════ -->
+  <div class="view" id="view-dashboard">
+    <div class="dash-grid">
+      <div class="dash-card full">
+        <div class="dash-title">📈 Progreso diario — <span id="dTitle"></span></div>
+        <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-title">🏆 Análisis por hábito</div>
+        <div id="haRows"></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-title">🔥 Mapa de calor (últimos 35 días)</div>
+        <div class="hm-days" id="hmDays"></div>
+        <div class="hm-grid" id="hmGrid"></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-title">⬆️ Mejores hábitos</div>
+        <div id="topList"></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-title">⚠️ Necesitan atención</div>
+        <div id="botList"></div>
+      </div>
+    </div>
+  </div><!-- /dashboard -->
+
+</div><!-- /app -->
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="t-dot"></span>
+  <span id="tMsg"></span>
+</div>
+
+<!-- ══ IMPORT MODAL ═══════════════════════════════════════════ -->
+<div id="importOverlay" class="modal-overlay">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeImport()">✕</button>
+
+    <div class="modal-title">↑ Importar CSV</div>
+    <div class="modal-sub">
+      Restaura tus datos desde un archivo exportado por HabitOS.<br>
+      Funciona con archivos de cualquier mes.
+    </div>
+
+    <div id="dropZone" class="drop-zone"
+      onclick="document.getElementById('csvFileIn').click()"
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="handleDrop(event)"
+    >
+      <div class="drop-icon">📂</div>
+      <div class="drop-title">Arrastra el CSV aquí o haz clic para seleccionar</div>
+      <div class="drop-sub">Solo archivos .csv exportados por HabitOS</div>
+      <input id="csvFileIn" type="file" accept=".csv" style="display:none" onchange="handleFileSelect(event)">
+    </div>
+
+    <div id="importPreview" style="display:none;">
+      <div class="preview-box">
+        <div class="preview-lbl">Vista previa</div>
+        <div id="previewContent"></div>
+      </div>
+      <div class="import-warning">
+        <div class="import-warning-title">⚠️ Elige cómo importar</div>
+        <div id="importWarning"></div>
+      </div>
+      <div class="import-actions">
+        <button class="btn-merge" onclick="confirmImport('merge')">🔀 Combinar con actuales</button>
+        <button class="btn-replace" onclick="confirmImport('replace')">↻ Reemplazar todo</button>
+      </div>
+    </div>
+
+    <div id="importEmpty" class="import-empty">
+      Sube un archivo para ver la vista previa
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS — order matters -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/state.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/render.js"></script>
+<script src="js/actions.js"></script>
+<script src="js/import-export.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
